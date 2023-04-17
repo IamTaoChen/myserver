@@ -3,7 +3,7 @@
  # @Author: DevinChan DevinChan@fudan.edu.cn
  # @Date: 2022-11-19 17:51:16
  # @LastEditors: Tao Chen
- # @LastEditTime: 2023-03-22 17:01:04
+ # @LastEditTime: 2023-04-04 12:02:08
  # @FilePath: \undefinedc:\Users\Devin\OneDrive\CodeStudy\install_docker.sh
  # @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
 ### 
@@ -16,8 +16,8 @@ curl -fsSL https://get.docker.com | bash -s docker
 # sudo usermod -aG mri docker
 
 # 下载docker-compose
-curl -L "https://github.com/docker/compose/releases/download/v2.12.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+&& chmod +x /usr/local/bin/docker-compose
 
 
 
