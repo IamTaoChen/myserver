@@ -11,8 +11,7 @@ fi
 
 # Configure the IP address and netmask for eth1 interface
 cat >> /etc/network/interfaces << EOF
-
-auto $ETH
+allow-hotplug $ETH
 iface $ETH inet static
 address $IP_ADDRESS
 netmask $NETMASK
