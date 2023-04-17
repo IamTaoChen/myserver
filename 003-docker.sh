@@ -1,23 +1,60 @@
 #!/bin/bash
 ###
- # @Author: DevinChan DevinChan@fudan.edu.cn
- # @Date: 2022-11-19 17:51:16
+ # @Descripttion: 
+ # @version: 
+ # @Author: Tao Chen
+ # @Date: 2023-04-15 05:58:41
  # @LastEditors: Tao Chen
- # @LastEditTime: 2023-04-04 12:02:08
- # @FilePath: \undefinedc:\Users\Devin\OneDrive\CodeStudy\install_docker.sh
- # @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ # @LastEditTime: 2023-04-17 12:58:10
 ### 
+DC_VSESION="v2.17.2"
+function isCmdExist() {
+	local cmd="$1"
+  	if [ -z "$cmd" ]; then
+		echo "Usage isCmdExist yourCmd"
+		return 1
+	fi
+
+	which "$cmd" >/dev/null 2>&1
+	if [ $? -eq 0 ]; then
+		return -1
+	fi
+
+	return 0
+}
+
+DOCKER_EXIST=$(isCmdExist docker)
+DOCKER_COMPOSE_EXIST=$(isCmdExist docker-compose)
+
+# install docker and docker-compose
+if [ $DOCKER_EXIST -lt 0 ]; then
+    echo "INSTALL DOCKER"   
+    curl -fsSL https://get.docker.com | bash -s docker
+else
+    echo "DOCKER EXIST"
+fi
+
+if [ $DOCKER_EXIST -lt 0 ]; then
+    echo "INSTALL DOCKER_COMPSE"
+    curl -L "https://github.com/docker/compose/releases/download/$DC_VSESION/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+else
+    echo "DOCKER-COMPOSE EXIST"
+    # echo "REINSTALL DOCKER_COMPSE"
+    # rm $(which docker-compose)
+fi
 
 
-curl -fsSL https://get.docker.com | bash -s docker 
-# curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+
+# curl -fsSL https://get.docker.com | bash -s docker 
+# # curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
 
 
-# sudo usermod -aG mri docker
+# # sudo usermod -aG mri docker
 
-# 下载docker-compose
-curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
-&& chmod +x /usr/local/bin/docker-compose
+# # 下载docker-compose
+# curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose \
+# && chmod +x /usr/local/bin/docker-compose
 
 
 
