@@ -10,6 +10,8 @@
 
 ROOT=$(dirname $(readlink -f $0))
 
+chmod +x $ROOT/*.sh
+
 ALL_SHELLS=`ls -l "${ROOT}/" | awk '/^-.*[0-9][0-9][0-9]-[A-Za-z]+\.sh$/ {print $NF}' `
 
 for SHELL_FILE in ${ALL_SHELLS[@]}
