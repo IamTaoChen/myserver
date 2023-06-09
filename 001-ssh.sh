@@ -26,6 +26,6 @@ mkdir -p $SSH_DIR
 echo $PUB_KEY >> $AUTH_KEY_FILE
 
 # change authorized_keys permission to 600
-chmod 600 $AUTH_KEY
-chmod 700 $SSH
-chown -R $NAME:$NAME $SSH
+chmod 600 $AUTH_KEY_FILE
+chmod 700 $SSH_DIR
+chown -R $NAME:$NAME $SSH_DIR
