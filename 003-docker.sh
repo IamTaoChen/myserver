@@ -4,7 +4,7 @@ DC_VSESION="v2.18.1"
 DOCKER_EXIST=$(command -v docker)
 if [ -z "$DOCKER_EXIST" ]; then
     echo "INSTALL DOCKER"   
-    sudo curl -fsSL https://get.docker.com | bash -s docker
+    curl -fsSL https://get.docker.com | bash -s docker
 else
     echo "DOCKER EXIST"
 fi
