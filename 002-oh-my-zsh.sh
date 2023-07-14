@@ -49,7 +49,7 @@ install_programs() {
                 0) # root
                     # Choose the appropriate package manager for your system
                     # Debian, Ubuntu etc:
-                    apt update && apt install $program
+                    apt-get update && apt-get install $program
                     # Or for CentOS, RHEL etc:
                     # yum install $program
                     # Or for Fedora:
@@ -58,7 +58,7 @@ install_programs() {
                 1) # sudo
                     # Choose the appropriate package manager for your system
                     # Debian, Ubuntu etc:
-                    sudo apt update && sudo apt install $program
+                    sudo apt-get update && sudo apt-get install $program
                     # Or for CentOS, RHEL etc:
                     # sudo yum install $program
                     # Or for Fedora:
