@@ -76,9 +76,8 @@ install_programs() {
 
 install_programs "${PRE_INSTALL[@]}"
 
-git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh &&
-
-cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc &&
+git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh && \
+cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
 PRIVILEGES=$(check_privileges)
 ZSH_SHELL=$(which zsh)
