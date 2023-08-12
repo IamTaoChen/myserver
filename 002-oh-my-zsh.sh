@@ -8,8 +8,51 @@
  # @LastEditTime: 2023-04-03 14:34:27
 ### 
 
-plugin_list=(zsh-autosuggestions zsh-syntax-highlighting)
+# Constants
+# you can change the following lines
 PRE_INSTALL=(zsh git)
+PLUGIN_LIST=(zsh-autosuggestions zsh-syntax-highlighting)
+# you should not change the following lines
+ZSHRC_PATH="$HOME/.zshrc"
+PLUGINS_LOCATION=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/
+GIT_BASE="https://github.com/zsh-users"
+
+# Functions
+
+# define a fucntion to check your privileges
+check_privileges() {
+    if [ "$(id -u)" = "0" ]; then
+        echo "root"
+    elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+        echo "sudo"
+    else
+        echo "regular"
+    fi
+}
+
+
+install_programs() {
+    local programs=("$@")
+    local privileges=$(check_privileges)
+    
+    for program in "${programs[@]}"; do
+        if ! command -v $program >/dev/null 2>&1; then
+            echo "Attempting to install $program..."
+            case $privileges in
+                "root")
+                    apt-get update && apt-get install $program
+                    ;;
+                "sudo")
+                    sudo apt-get update && sudo apt-get install $program
+                    ;;
+                "regular")
+                    echo "You need to be root or have sudo privileges to install software."
+                    exit 1
+                    ;;
+            esac
+        fi
+    done
+}
 
 add_plug() {
     PLUGIN=$1
@@ -48,94 +91,45 @@ check_privileges() {
     fi
 }
 
-# Function to check if a list of programs is installed
-check_programs_installed() {
-    local programs=("$@")
-    for program in "${programs[@]}"; do
-        if ! command -v $program >/dev/null 2>&1; then
-            echo "$program is not installed"
-            return 1
-        fi
-    done
-    echo "All programs are installed"
-    return 0
-}
 
-install_programs() {
-    local programs=("$@")
-    check_privileges
-    local privileges=$?
-    
-    for program in "${programs[@]}"; do
-        if ! command -v $program >/dev/null 2>&1; then
-            echo "Attempting to install $program..."
-            case $privileges in
-                0) # root
-                    # Choose the appropriate package manager for your system
-                    # Debian, Ubuntu etc:
-                    apt-get update && apt-get install $program
-                    # Or for CentOS, RHEL etc:
-                    # yum install $program
-                    # Or for Fedora:
-                    # dnf install $program
-                    ;;
-                1) # sudo
-                    # Choose the appropriate package manager for your system
-                    # Debian, Ubuntu etc:
-                    sudo apt-get update && sudo apt-get install $program
-                    # Or for CentOS, RHEL etc:
-                    # sudo yum install $program
-                    # Or for Fedora:
-                    # sudo dnf install $program
-                    ;;
-                2) # regular user
-                    echo "You need to be root or have sudo privileges to install software."
-                    exit 1
-                    ;;
-            esac
-        fi
-    done
-}
-
+# Main Script Execution
+PRIVILEGES=$(check_privileges)
 
 install_programs "${PRE_INSTALL[@]}"
 
-git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh && \
-cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc && \
+if ! [ -d "$HOME/.oh-my-zsh" ]; then
+    git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh || {
+        echo "Failed to clone oh-my-zsh repository. Exiting..."
+        exit 1
+    }
+    cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
+fi
 
-check_privileges
-PRIVILEGES=$?
+# Change default shell to zsh
 ZSH_SHELL=$(which zsh)
 case $PRIVILEGES in
-    0)
-        echo "User is root."
+    "root")
         chsh -s ${ZSH_SHELL}
-        # usermod -s ${ZSH} ${USER}
         ;;
-    1)
-        echo "User has sudo privileges."
+    "sudo")
         sudo chsh -s ${ZSH_SHELL} $USER
-        # Add operations to be performed if the user has sudo privileges here
         ;;
-    2)
-        echo "User is a regular user."
+    "regular")
         sed -i "1iexport SHELL=${ZSH_SHELL}" ~/.bashrc
         sed -i "2iexec ${ZSH_SHELL} -l" ~/.bashrc
         ;;
 esac
 
-
-PLUGINS_LOCATION=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/
-GIT_BASE=https://github.com/zsh-users
-
-# zsh-autosuggestions
-# git clone ${GIT_BASE}/zsh-autosuggestions ${PLUGINS}/zsh-autosuggestions
-
+# Install Plugins and Add to .zshrc
 add_plug " "
 add_plug sudo
 add_plug z
-for plugin in ${plugin_list[@]}
-do
-    git clone ${GIT_BASE}/${plugin} ${PLUGINS_LOCATION}/${plugin}
+for plugin in "${PLUGIN_LIST[@]}"; do
+    if ! [ -d "${PLUGINS_LOCATION}/${plugin}" ]; then
+        git clone ${GIT_BASE}/${plugin} ${PLUGINS_LOCATION}/${plugin} || {
+            echo "Failed to clone ${plugin}. Continuing..."
+            continue
+        }
+    fi
     add_plug ${plugin}
 done
