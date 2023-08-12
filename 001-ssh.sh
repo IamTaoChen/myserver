@@ -3,71 +3,83 @@ PUB_KEY='ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCvgg4VkabGgHClQdXAhLSCy04VejRmm/y
 
 ROOT_DIR=$(dirname $(realpath $0))
 USER=$(whoami)
-PUB_FILE=$ROOT_DIR/id_rsa.pub
+PUB_FILE="$ROOT_DIR/id_rsa.pub"
 
-# get options
-# use -u to specify user, default is current user
-# use -f to specify pub file, default is id_rsa.pub in current dir
 while getopts ":u:f:" opt; do
   case $opt in
-    u) USER="$OPTARG"
-    ;;
-    f) PUB_FILE="$OPTARG"
-    ;;
-    \?) echo "Invalid option -$OPTARG" >&2
-    ;;
+    u) USER="$OPTARG";;
+    f) PUB_FILE="$OPTARG";;
+    \?) echo "Invalid option -$OPTARG" >&2;;
     :) echo "Option -$OPTARG requires an argument." >&2
-       exit 1
-    ;;
+       exit 1;;
   esac
 done
-echo  "ROOT_DIR: $ROOT_DIR"
+
+echo "ROOT_DIR: $ROOT_DIR"
 echo "USER: $USER"
 echo "PUB_FILE: $PUB_FILE"
 
-if [ ! -f "$PUB_FILE" ]; then
-    echo "$PUB_FILE NOT EXIST"
-    echo "Use default PUB_KEY"
-else
-    echo "PUB_FILE EXIST"
-    PUB_KEY=$(cat $PUB_FILE)
-fi
+[ -f "$PUB_FILE" ] && PUB_KEY=$(cat $PUB_FILE)
 echo "PUB_KEY: $PUB_KEY"
 
-# get home dir
-HOME_DIR=$(getent passwd $USER | cut -d: -f6)
-if [ -z "$HOME_DIR" ]; then
-    echo "HOME_DIR NOT FOUND"
-    exit 1
-else
-    echo "HOME_DIR: $HOME_DIR"
-fi
+HOME_DIR=$(eval echo ~$USER)
+echo "HOME_DIR: $HOME_DIR"
 
+SSH_DIR="$HOME_DIR/.ssh"
+AUTH_KEY_FILE="$SSH_DIR/authorized_keys"
 
-# get .ssh dir
-SSH_DIR=$HOME_DIR/.ssh
-AUTH_KEY_FILE=$SSH_DIR/authorized_keys
-
-# create .ssh if not exist
 mkdir -p $SSH_DIR
 
-# create authorized_keys if not exist
-if [ -f "$AUTH_KEY_FILE" ]; then
-    echo "$AUTH_KEY_FILE EXIST"
+[ -f "$AUTH_KEY_FILE" ] || touch $AUTH_KEY_FILE
+
+if grep -qFx "$PUB_KEY" "$AUTH_KEY_FILE"; then
+    echo "PUB_KEY already in $AUTH_KEY_FILE"
 else
-    echo "$AUTH_KEY_FILE NOT EXIST, CREATE"
-    touch $AUTH_KEY_FILE
+    echo "$PUB_KEY" >> "$AUTH_KEY_FILE"
+    echo "Added PUB_KEY to $AUTH_KEY_FILE"
 fi
 
-# add pub_key to authorized_keys if not exist
-if grep -q "$PUB_KEY" "$AUTH_KEY_FILE"; then
-    echo "PUB_KEY EXIST, SKIP"
-else
-    echo $PUB_KEY >> $AUTH_KEY_FILE
-    echo "ADD PUB_KEY TO $AUTH_KEY_FILE"
-fi
-
-# change authorized_keys permission to 600
 chmod 600 $AUTH_KEY_FILE
 chmod 700 $SSH_DIR
 chown -R $USER:$USER $SSH_DIR
+
+sshd_config() {
+    SSHD_CONFIG_PATH="/etc/ssh/sshd_config"
+    NEED_RESTART=0
+
+    if grep -q "^PubkeyAuthentication no" $SSHD_CONFIG_PATH; then
+        NEED_RESTART=1
+        sed -i 's/^PubkeyAuthentication no/PubkeyAuthentication yes/' $SSHD_CONFIG_PATH
+        echo "Changed PubkeyAuthentication to yes in $SSHD_CONFIG_PATH"
+    elif ! grep -q "^PubkeyAuthentication" $SSHD_CONFIG_PATH; then
+        NEED_RESTART=1
+        echo "PubkeyAuthentication yes" >> $SSHD_CONFIG_PATH
+        echo "Added PubkeyAuthentication to $SSHD_CONFIG_PATH"
+    fi
+
+    if [ $NEED_RESTART -eq 1 ]; then
+        if systemctl is-active --quiet sshd; then
+            systemctl restart sshd && echo "Restarted sshd using systemctl"
+        elif service --status-all | grep -Fq 'sshd'; then
+            service sshd restart && echo "Restarted sshd using service"
+        else
+            echo "Failed to restart sshd."
+            return 1
+        fi
+    fi
+    return 0
+}
+
+run_sshd_config() {
+    if [ "$(id -u)" = "0" ]; then
+        sshd_config
+    elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+        sudo bash -c "sshd_config"
+    else
+        if sshd_config; then
+            echo "sshd_config changed. Please restart the sshd service as root or using sudo."
+        fi
+    fi
+}
+
+run_sshd_config
