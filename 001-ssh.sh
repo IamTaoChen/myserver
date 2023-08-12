@@ -43,6 +43,8 @@ chmod 600 $AUTH_KEY_FILE
 chmod 700 $SSH_DIR
 chown -R $USER:$USER $SSH_DIR
 
+
+# check if sshd_config needs to be changed
 sshd_config() {
     SSHD_CONFIG_PATH="/etc/ssh/sshd_config"
     NEED_RESTART=0
@@ -70,15 +72,13 @@ sshd_config() {
     return 0
 }
 
+# run sshd_config as root or with sudo
+# if not root and sudo is not installed, sshd_config will not be run
 run_sshd_config() {
     if [ "$(id -u)" = "0" ]; then
         sshd_config
     elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
         sudo bash -c "sshd_config"
-    else
-        if sshd_config; then
-            echo "sshd_config changed. Please restart the sshd service as root or using sudo."
-        fi
     fi
 }
 
