@@ -1,4 +1,4 @@
-DC_VSESION="v2.18.1"
+DC_VSESION="v2.20.2"
 
 
 DOCKER_EXIST=$(command -v docker)
