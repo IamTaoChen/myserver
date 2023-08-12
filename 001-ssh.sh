@@ -60,7 +60,7 @@ else
 fi
 
 # add pub_key to authorized_keys if not exist
-if grep -q $PUB_KEY $AUTH_KEY_FILE; then
+if grep -q "$PUB_KEY" "$AUTH_KEY_FILE"; then
     echo "PUB_KEY EXIST, SKIP"
 else
     echo $PUB_KEY >> $AUTH_KEY_FILE
