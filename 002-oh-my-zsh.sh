@@ -1,12 +1,4 @@
 #!/bin/bash
-###
- # @Descripttion: 
- # @version: 
- # @Author: Tao Chen
- # @Date: 2023-02-01 16:33:26
- # @LastEditors: Tao Chen
- # @LastEditTime: 2023-04-03 14:34:27
-### 
 
 # Constants
 # you can change the following lines
@@ -18,7 +10,6 @@ PLUGINS_LOCATION=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/
 GIT_BASE="https://github.com/zsh-users"
 
 # Functions
-
 # define a fucntion to check your privileges
 check_privileges() {
     if [ "$(id -u)" = "0" ]; then
@@ -56,7 +47,6 @@ install_programs() {
 
 add_plug() {
     PLUGIN=$1
-    ZSHRC_PATH="$HOME/.zshrc"
 
     # check if plugin is already defined
     PLUGIN_EXISTS=$(awk -v plugin="$PLUGIN" '
@@ -74,22 +64,22 @@ add_plug() {
 
     # add plugin to .zshrc
     awk -v plugin="$PLUGIN" '
-    /plugins=\(/ { print; print "\t" plugin; next; }
+    BEGIN { added=0 }
+    /plugins=\(/ {
+        sub(/\)/, " " plugin " &")
+        added=1
+    }
     { print; }
+    END {
+        if (added == 0) {
+            print "plugins=(" plugin ")"
+        }
+    }
     ' $ZSHRC_PATH > "${ZSHRC_PATH}.tmp" && mv "${ZSHRC_PATH}.tmp" $ZSHRC_PATH
 
     echo "Plugin $PLUGIN added successfully."
 }
 
-check_privileges() {
-    if [ "$(id -u)" = "0" ]; then
-        return 0  # root
-    elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
-        return 1  # sudo
-    else
-        return 2  # regular user
-    fi
-}
 
 
 # Main Script Execution
@@ -115,10 +105,26 @@ case $PRIVILEGES in
         sudo chsh -s ${ZSH_SHELL} $USER
         ;;
     "regular")
-        sed -i "1iexport SHELL=${ZSH_SHELL}" ~/.bashrc
-        sed -i "2iexec ${ZSH_SHELL} -l" ~/.bashrc
+        BASHRC="$HOME/.bashrc"
+        # Check if ~/.bashrc exists, if not, create it
+        [ ! -f $BASHRC ] && touch $BASHRC
+
+        # Check if the line exists, if not, prepend it
+        if ! grep -Fxq "export SHELL=${ZSH_SHELL}" $BASHRC; then
+            # Backup original .bashrc
+            cp $BASHRC "$BASHRC.backup"
+
+            # Prepend lines to the beginning and write the content back to .bashrc
+            echo -e "export SHELL=${ZSH_SHELL}\nexec ${ZSH_SHELL} -l" > $BASHRC
+            cat "$BASHRC.backup" >> $BASHRC
+
+            # Remove the backup file (optional)
+            rm "$BASHRC.backup"
+        fi
         ;;
 esac
+
+
 
 # Install Plugins and Add to .zshrc
 add_plug " "
