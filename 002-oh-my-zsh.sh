@@ -11,8 +11,31 @@
 plugin_list=(zsh-autosuggestions zsh-syntax-highlighting)
 PRE_INSTALL=(zsh git)
 
-add_plug(){
-    sed -i "s/^plugins=(/plugins=(\n\t$1/g" ~/.zshrc
+add_plug() {
+    PLUGIN=$1
+    ZSHRC_PATH="$HOME/.zshrc"
+
+    # check if plugin is already defined
+    PLUGIN_EXISTS=$(awk -v plugin="$PLUGIN" '
+    BEGIN { found = 0; in_plugins = 0; }
+    /plugins=\(/ { in_plugins = 1; }
+    in_plugins && /\)/ { in_plugins = 0; }
+    in_plugins && $0 ~ plugin { found = 1; exit; }
+    END { print found }
+    ' $ZSHRC_PATH)
+
+    if [ "$PLUGIN_EXISTS" = "1" ]; then
+        echo "Plugin $PLUGIN is already defined."
+        return
+    fi
+
+    # add plugin to .zshrc
+    awk -v plugin="$PLUGIN" '
+    /plugins=\(/ { print; print "\t" plugin; next; }
+    { print; }
+    ' $ZSHRC_PATH > "${ZSHRC_PATH}.tmp" && mv "${ZSHRC_PATH}.tmp" $ZSHRC_PATH
+
+    echo "Plugin $PLUGIN added successfully."
 }
 
 check_privileges() {
@@ -40,7 +63,8 @@ check_programs_installed() {
 
 install_programs() {
     local programs=("$@")
-    local privileges=$(check_privileges)
+    check_privileges
+    local privileges=$?
     
     for program in "${programs[@]}"; do
         if ! command -v $program >/dev/null 2>&1; then
@@ -77,9 +101,10 @@ install_programs() {
 install_programs "${PRE_INSTALL[@]}"
 
 git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh && \
-cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
+cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc && \
 
-PRIVILEGES=$(check_privileges)
+check_privileges
+PRIVILEGES=$?
 ZSH_SHELL=$(which zsh)
 case $PRIVILEGES in
     0)
@@ -114,12 +139,3 @@ do
     git clone ${GIT_BASE}/${plugin} ${PLUGINS_LOCATION}/${plugin}
     add_plug ${plugin}
 done
-
-
-# plugins=()
-# # sed -i 's/plugins=(/plugins=(\n\tzsh-autosuggestions/g' 
-# add_plug zsh-autosuggestions
-
-# # zsh-syntax-highlighting
-# git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-# add_plug zsh-syntax-highlighting
