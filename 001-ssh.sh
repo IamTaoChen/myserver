@@ -5,6 +5,9 @@ ROOT_DIR=$(dirname $(realpath $0))
 USER=$(whoami)
 PUB_FILE=$ROOT_DIR/id_rsa.pub
 
+# get options
+# use -u to specify user, default is current user
+# use -f to specify pub file, default is id_rsa.pub in current dir
 while getopts ":u:f:" opt; do
   case $opt in
     u) USER="$OPTARG"
