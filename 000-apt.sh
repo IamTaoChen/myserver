@@ -10,5 +10,5 @@
 
 apt-get update
 
-apt-get install -y zsh curl tree git
+apt-get install -y zsh curl tree git sudo vim wget
 
