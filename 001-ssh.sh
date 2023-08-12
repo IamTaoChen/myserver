@@ -40,7 +40,6 @@ else
     echo "HOME_DIR: $HOME_DIR"
 fi
 
-exit 1
 
 # get .ssh dir
 SSH_DIR=$HOME_DIR/.ssh
