@@ -109,22 +109,20 @@ case $PRIVILEGES in
         # Check if ~/.bashrc exists, if not, create it
         [ ! -f $BASHRC ] && touch $BASHRC
 
-        # Check if the line exists, if not, prepend it
-        if ! grep -Fxq "export SHELL=${ZSH_SHELL}" $BASHRC; then
+         # Check if the line exists, if not, prepend it
+        if ! grep -Fxq 'if [ -z "$DISPLAY" ] && [ -n "$SSH_CLIENT" ]; then' $BASHRC; then
             # Backup original .bashrc
             cp $BASHRC "$BASHRC.backup"
-
+        
             # Prepend lines to the beginning and write the content back to .bashrc
-            echo -e "export SHELL=${ZSH_SHELL}\nexec ${ZSH_SHELL} -l" > $BASHRC
+            echo -e 'if [ -z "$DISPLAY" ] && [ -n "$SSH_CLIENT" ]; then\n  export ZSH_SHELL=$(which zsh)\n  export SHELL="${ZSH_SHELL}"\n  exec "${ZSH_SHELL}" -l\nfi' > $BASHRC
             cat "$BASHRC.backup" >> $BASHRC
-
+        
             # Remove the backup file (optional)
             rm "$BASHRC.backup"
         fi
         ;;
 esac
-
-
 
 # Install Plugins and Add to .zshrc
 add_plug " "
