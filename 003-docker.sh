@@ -21,7 +21,7 @@ fi
 DOCKER_COMPOSE_EXIST=$(command -v docker-compose)
 if [ -z "$DOCKER_COMPOSE_EXIST" ]; then
     echo "INSTALL DOCKER_COMPSE"
-    local DOCKER_COMPOSE_DOWNLOAD_URL="https://github.com/docker/compose/releases/download/$DC_VSESION/docker-compose-$(uname -s)-$(uname -m)"
+    DOCKER_COMPOSE_DOWNLOAD_URL="https://github.com/docker/compose/releases/download/$DC_VSESION/docker-compose-$(uname -s)-$(uname -m)"
     echo "DOCKER_COMPOSE_DOWNLOAD_URL: $DOCKER_COMPOSE_DOWNLOAD_URL"
     curl -L $DOCKER_COMPOSE_DOWNLOAD_URL -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
