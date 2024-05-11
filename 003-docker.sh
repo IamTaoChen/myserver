@@ -1,5 +1,14 @@
-DC_VSESION="v2.24.6"
 
+# Install Docker and Docker-Compose
+
+# Try to get the latest version of docker-compose
+DC_VSESION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+
+# if failed to get the latest version, use default version
+if [ -z "$DC_VSESION" ]; then
+    echo "Failed to get the latest version of docker-compose, using default version"
+    DC_VSESION="v2.27.0"
+fi
 
 DOCKER_EXIST=$(command -v docker)
 if [ -z "$DOCKER_EXIST" ]; then
