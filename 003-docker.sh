@@ -1,6 +1,6 @@
 
 # Install Docker and Docker-Compose
-
+ROOT_DIR=$(dirname $(realpath $0))
 # Try to get the latest version of docker-compose
 DC_VSESION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
 
@@ -13,7 +13,17 @@ fi
 DOCKER_EXIST=$(command -v docker)
 if [ -z "$DOCKER_EXIST" ]; then
     echo "INSTALL DOCKER"   
-    curl -fsSL https://get.docker.com | bash -s docker
+    # try to install docker using official script
+    if ! curl -fsSL https://get.docker.com | bash -s docker; then
+        echo "Failed to install Docker using official script, try to install Docker using aliyun mirror."
+        # try to install docker using aliyun mirror
+        if ! bash $ROOT_DIR/scripts/get-docker.sh --mirror Aliyun; then
+            echo "Failed to install Docker using aliyun mirror, exit."
+            exit 1
+        else
+            echo "Docker installed using aliyun mirror."
+        fi
+    fi
 else
     echo "DOCKER EXIST"
 fi
