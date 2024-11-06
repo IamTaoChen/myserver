@@ -35,7 +35,12 @@ mkdir -p $SSH_DIR
 if grep -qFx "$PUB_KEY" "$AUTH_KEY_FILE"; then
     echo "PUB_KEY already in $AUTH_KEY_FILE"
 else
-    echo "$PUB_KEY" >> "$AUTH_KEY_FILE"
+    # Append the public key with a header comment and newlines
+    {
+        echo -e "\n# Script Add :"
+        echo "$PUB_KEY"
+        echo -e "\n"
+    } >> "$AUTH_KEY_FILE"
     echo "Added PUB_KEY to $AUTH_KEY_FILE"
 fi
 
